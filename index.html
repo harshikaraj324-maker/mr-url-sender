@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>URL Sender — MR ROBOT</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060d1a;color:#e2e8f0;font-family:system-ui,sans-serif;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#0f172a,#1e293b);border-bottom:1px solid #1e3a5f;padding:16px 24px;display:flex;align-items:center;gap:14px}
+.hdr-icon{width:38px;height:38px;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hdr h1{font-size:17px;font-weight:800;color:#f8fafc}
+.hdr p{font-size:12px;color:#64748b;margin-top:1px}
+.badge{background:#3b82f620;color:#60a5fa;font-size:10px;font-weight:800;padding:3px 10px;border-radius:99px;letter-spacing:.8px;border:1px solid #3b82f640}
+.body{padding:20px;max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.body{grid-template-columns:1fr}}
+.card{background:#0f1c2e;border:1px solid #1e3a5f;border-radius:14px;padding:20px}
+.card-full{grid-column:1/-1}
+.card h2{font-size:13px;font-weight:800;color:#93c5fd;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.7px;text-transform:uppercase;margin-bottom:5px}
+input,select,textarea{width:100%;background:#060d1a;border:1.5px solid #1e3a5f;border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px #3b82f615}
+textarea{resize:vertical;font-family:monospace;font-size:12px;line-height:1.6}
+.field{margin-bottom:14px}.field:last-child{margin-bottom:0}
+.btn{padding:10px 18px;border-radius:9px;border:none;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-blue{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 4px 12px #3b82f630}
+.btn-blue:hover{transform:translateY(-1px);box-shadow:0 6px 20px #3b82f640}
+.btn-blue:disabled{background:#1e3a5f;color:#475569;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.btn-ghost:hover{background:#334155;color:#f1f5f9}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:6px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.resp{background:#060d1a;border:1px solid #1e3a5f;border-radius:10px;padding:14px;margin-top:14px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:320px;overflow-y:auto;line-height:1.6;display:none}
+.resp.ok{color:#4ade80;border-color:#16532040}.resp.err{color:#f87171;border-color:#7f1d1d40}
+.status-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;display:inline-block}
+.s2xx{background:#16532040;color:#4ade80}.s4xx{background:#78350f40;color:#fbbf24}.s5xx{background:#7f1d1d40;color:#f87171}
+.payload-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.payload-row{display:grid;grid-template-columns:1fr 36px 1fr 28px;gap:6px;align-items:start}
+.type-toggle{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:6px;cursor:pointer;font-size:10px;font-weight:800;color:#94a3b8;transition:all .15s;width:36px;text-align:center}
+.type-toggle.obj{color:#60a5fa;border-color:#3b82f640;background:#3b82f610}
+.del-row{background:none;border:none;cursor:pointer;color:#475569;font-size:18px;padding:4px;border-radius:4px;transition:color .15s;line-height:1}
+.del-row:hover{color:#f87171}
+.device-grid{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.device-item{background:#060d1a;border:1.5px solid #1e3a5f;border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between}
+.device-item:hover{border-color:#3b82f6}.device-item.sel{border-color:#3b82f6;background:#3b82f610}
+.device-name{font-weight:700;font-size:13px;color:#f1f5f9}
+.device-id{font-size:10px;color:#64748b;font-family:monospace;margin-top:2px}
+.overlay{position:fixed;inset:0;background:#060d1aee;display:flex;align-items:center;justify-content:center;z-index:99;backdrop-filter:blur(4px)}
+.setup-box{background:#0f1c2e;border:1px solid #1e3a5f;border-radius:18px;padding:32px;width:420px;max-width:90vw}
+.setup-box h2{font-size:20px;font-weight:800;text-align:center;margin-bottom:4px}
+.setup-box p{font-size:13px;color:#64748b;text-align:center;margin-bottom:24px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #ffffff40;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.json-preview{background:#060d1a;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-family:monospace;font-size:11px;line-height:1.6;color:#7dd3fc;white-space:pre-wrap;word-break:break-all;min-height:60px;max-height:180px;overflow-y:auto}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="setup-box">
+    <div style="text-align:center;font-size:40px;margin-bottom:16px">&#128279;</div>
+    <h2>URL Sender</h2>
+    <p>url_update payload sender &mdash; MR ROBOT</p>
+    <div class="field"><label>Panel API Base URL</label><input id="s-base" value="https://mr-panel.pages.dev"/></div>
+    <div class="field"><label>API Secret (x-api-key)</label><input id="s-key" type="password" placeholder="your API_SECRET"/></div>
+    <div class="field"><label>Default App ID</label><input id="s-app" placeholder="SKY-APP-2026-X9F3"/></div>
+    <button class="btn btn-blue" style="width:100%;justify-content:center;margin-top:8px" onclick="saveCfg()">Save &amp; Enter</button>
+  </div>
+</div>
+<div class="hdr">
+  <div class="hdr-icon">&#128279;</div>
+  <div><h1>URL Sender</h1><p id="hdr-sub">url_update &rarr; handleUrlUpdate(msg.data)</p></div>
+  <div style="flex:1"></div>
+  <span class="badge">HIGH PRIORITY</span>
+  <button class="btn btn-ghost btn-sm" style="margin-left:10px" onclick="document.getElementById('overlay').style.display='flex'">&#9881; Config</button>
+</div>
+<div class="body">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <h2>&#128241; Select Device</h2>
+      <div class="field"><label>App ID</label><input id="dev-app" placeholder="SKY-APP-2026-X9F3" oninput="schedDev()"/></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadDevices()">&#8635; Load Devices</button>
+      <div class="device-grid" id="dev-grid" style="margin-top:12px"><p style="font-size:12px;color:#475569">Enter App ID and click Load</p></div>
+      <div class="field" style="margin-top:12px"><label>Selected Device ID</label><input id="sel-device" placeholder="Auto-filled on click" style="font-family:monospace;font-size:12px"/></div>
+    </div>
+    <div class="card">
+      <h2>&#9889; Quick Presets</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="loadPreset('single')">&#128279; Single URL</button>
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="loadPreset('multi')">&#128203; Multi-URL (nested)</button>
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="loadPreset('config')">&#9881; URL + Config block</button>
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="loadPreset('priority')">&#128680; High-priority override</button>
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="loadPreset('nested')">&#128193; Full nested payload</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <h2>&#129329; Payload Builder</h2>
+      <div class="field"><label>Action</label><input id="action-field" value="url_update" oninput="updatePreview()"/></div>
+      <div class="field">
+        <label style="margin-bottom:8px">Fields <span style="color:#475569;font-weight:400;text-transform:none">(TXT=string, {}=nested JSON object)</span></label>
+        <div id="payload-rows" class="payload-rows"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addRow()">+ Add Field</button>
+      </div>
+      <div class="field"><label>Live JSON Preview</label><div class="json-preview" id="json-preview">{}</div></div>
+      <div class="field"><label>Or paste raw JSON</label><textarea id="raw-json" rows="3" placeholder='{"action":"url_update","url":"..."}' oninput="updatePreview()"></textarea></div>
+      <div class="btns">
+        <button class="btn btn-blue" id="send-btn" onclick="sendPayload()">Send FCM</button>
+        <button class="btn btn-ghost btn-sm" onclick="copyJson()">Copy JSON</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearBuilder()">Clear</button>
+        <span id="send-status" style="align-self:center;font-size:12px"></span>
+      </div>
+      <div id="send-resp" class="resp"></div>
+    </div>
+  </div>
+  <div class="card card-full">
+    <h2>Batch Send &mdash; All Devices in App</h2>
+    <div class="btns">
+      <button class="btn btn-blue btn-sm" onclick="batchSend()">Send to All Devices</button>
+      <span id="batch-status" style="font-size:12px;color:#94a3b8;align-self:center"></span>
+    </div>
+    <div id="batch-resp" class="resp"></div>
+  </div>
+</div>
+<script>
+var CFG={},deviceList=[],rows={},rowId=0,devTimer=null;
+function saveCfg(){
+  var base=document.getElementById('s-base').value.trim().replace(//+$/,'');
+  var key=document.getElementById('s-key').value.trim();
+  var app=document.getElementById('s-app').value.trim();
+  if(!base||!key){alert('Base URL and API key required');return;}
+  CFG={base:base,key:key,app:app};
+  localStorage.setItem('mrus_cfg',JSON.stringify(CFG));
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('dev-app').value=app;
+  document.getElementById('hdr-sub').textContent=base+' -> url_update';
+  if(app)loadDevices();
+  if(!document.getElementById('payload-rows').children.length)initBuilder();
+}
+function loadCfg(){
+  try{CFG=JSON.parse(localStorage.getItem('mrus_cfg')||'{}');}catch(e){CFG={};}
+  if(CFG.base&&CFG.key){
+    document.getElementById('overlay').style.display='none';
+    document.getElementById('s-base').value=CFG.base;
+    document.getElementById('s-key').value=CFG.key;
+    document.getElementById('s-app').value=CFG.app||'';
+    document.getElementById('dev-app').value=CFG.app||'';
+    document.getElementById('hdr-sub').textContent=CFG.base+' -> url_update';
+    initBuilder();
+    if(CFG.app)loadDevices();
+  }
+}
+function schedDev(){clearTimeout(devTimer);devTimer=setTimeout(loadDevices,700);}
+async function loadDevices(){
+  var appId=document.getElementById('dev-app').value.trim();
+  var grid=document.getElementById('dev-grid');
+  if(!appId){grid.innerHTML='<p style="font-size:12px;color:#475569">Enter App ID first</p>';return;}
+  grid.innerHTML='<p style="font-size:12px;color:#64748b">Loading...</p>';
+  try{
+    var r=await apiFetch('/api/devices?appId='+encodeURIComponent(appId));
+    var devices=await r.json();
+    deviceList=Array.isArray(devices)?devices:[];
+    if(!deviceList.length){grid.innerHTML='<p style="font-size:12px;color:#475569">No devices found</p>';return;}
+    grid.innerHTML=deviceList.map(function(d){
+      return '<div class="device-item" onclick="selectDev(''+d.deviceId.replace(/'/g,"\'")+'',' +
+        '''+( (d.name||'').replace(/'/g,"\'") )+'',this)"><div>'+
+        '<div class="device-name">'+(d.name||'Unknown')+'</div>'+
+        '<div class="device-id">'+d.deviceId+'</div></div></div>';
+    }).join('');
+  }catch(e){grid.innerHTML='<p style="font-size:12px;color:#f87171">Error: '+e.message+'</p>';}
+}
+function selectDev(id,name,el){
+  document.querySelectorAll('.device-item').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  document.getElementById('sel-device').value=id;
+  updatePreview();
+}
+function initBuilder(){
+  addRow('url','https://example.com');
+  addRow('priority','high');
+  addRow('ts',String(Date.now()));
+  updatePreview();
+}
+function addRow(key,val,isObj){
+  key=key||'';val=val||'';isObj=!!isObj;
+  var id=rowId++;
+  rows[id]={key:key,value:val,isObj:isObj};
+  var container=document.getElementById('payload-rows');
+  var div=document.createElement('div');
+  div.className='payload-row';div.id='row-'+id;
+  div.innerHTML=
+    '<input placeholder="key" value="'+key+'" oninput="rows['+id+'].key=this.value;updatePreview()"/>'+
+    '<button class="type-toggle'+(isObj?' obj':'')+'" id="tt-'+id+'" onclick="toggleType('+id+')">'+(isObj?'{}':'TXT')+'</button>'+
+    '<input placeholder="'+(isObj?'paste JSON here':'value')+'" value="'+(isObj?'':val)+'" id="val-'+id+'" oninput="rows['+id+'].value=this.value;updatePreview()" style="'+(isObj?'display:none':'')+'"/>'+
+    '<textarea placeholder='{"k":"v"}' id="obj-'+id+'" oninput="rows['+id+'].value=this.value;updatePreview()" rows="2" style="font-size:11px;'+(isObj?'':'display:none')+'">'+(isObj?val:'')+'</textarea>'+
+    '<button class="del-row" onclick="delRow('+id+')">&times;</button>';
+  container.appendChild(div);
+  updatePreview();
+}
+function toggleType(id){
+  rows[id].isObj=!rows[id].isObj;
+  var isObj=rows[id].isObj;
+  document.getElementById('tt-'+id).textContent=isObj?'{}':'TXT';
+  document.getElementById('tt-'+id).className='type-toggle'+(isObj?' obj':'');
+  document.getElementById('val-'+id).style.display=isObj?'none':'';
+  document.getElementById('obj-'+id).style.display=isObj?'':'none';
+  updatePreview();
+}
+function delRow(id){delete rows[id];var el=document.getElementById('row-'+id);if(el)el.remove();updatePreview();}
+function buildPayload(){
+  var action=document.getElementById('action-field').value.trim()||'url_update';
+  var deviceId=document.getElementById('sel-device').value.trim();
+  var obj={action:action};
+  if(deviceId)obj.deviceId=deviceId;
+  Object.keys(rows).forEach(function(k){
+    var r=rows[k];
+    if(!r.key)return;
+    if(r.isObj){try{obj[r.key]=JSON.parse(r.value);}catch(e){obj[r.key]=r.value;}}
+    else obj[r.key]=r.value;
+  });
+  return obj;
+}
+function updatePreview(){
+  try{
+    var raw=document.getElementById('raw-json').value.trim();
+    var payload=raw?JSON.parse(raw):buildPayload();
+    document.getElementById('json-preview').textContent=JSON.stringify(payload,null,2);
+  }catch(e){document.getElementById('json-preview').textContent='Invalid JSON';}
+}
+function copyJson(){
+  navigator.clipboard.writeText(document.getElementById('json-preview').textContent).then(function(){
+    var b=event.target;b.textContent='Copied!';setTimeout(function(){b.textContent='Copy JSON';},1500);
+  });
+}
+function clearBuilder(){
+  Object.keys(rows).forEach(function(id){delete rows[id];var el=document.getElementById('row-'+id);if(el)el.remove();});
+  document.getElementById('action-field').value='url_update';
+  document.getElementById('raw-json').value='';
+  document.getElementById('json-preview').textContent='{}';
+  rowId=0;
+}
+function loadPreset(type){
+  clearBuilder();
+  if(type==='single'){addRow('url','https://example.com');addRow('priority','high');}
+  else if(type==='multi'){addRow('urls','{"primary":"https://main.com","backup":"https://backup.com"}',true);addRow('mode','auto');addRow('priority','high');}
+  else if(type==='config'){addRow('url','https://example.com');addRow('config','{"autoLoad":true,"delay":5,"retry":3}',true);addRow('priority','high');}
+  else if(type==='priority'){addRow('url','https://emergency.com');addRow('priority','CRITICAL');addRow('override','true');addRow('clearCache','true');}
+  else if(type==='nested'){
+    addRow('urls','{"primary":"https://main.com","fallback":"https://cdn.com"}',true);
+    addRow('config','{"autoLoad":true,"delay":3,"loop":false}',true);
+    addRow('meta','{"version":"2","source":"admin"}',true);
+    addRow('priority','high');
+  }
+  updatePreview();
+}
+function apiFetch(path,opts){
+  opts=opts||{};
+  var url=path.startsWith('http')?path:CFG.base+path;
+  opts.headers=Object.assign({},opts.headers||{},{'x-api-key':CFG.key});
+  return fetch(url,opts);
+}
+async function sendPayload(){
+  var deviceId=document.getElementById('sel-device').value.trim();
+  if(!deviceId){alert('Select a device first');return;}
+  var data;
+  var raw=document.getElementById('raw-json').value.trim();
+  try{data=raw?JSON.parse(raw):buildPayload();}catch(e){alert('Invalid JSON');return;}
+  var btn=document.getElementById('send-btn');
+  var st=document.getElementById('send-status');
+  var resp=document.getElementById('send-resp');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Sending...';st.textContent='';
+  try{
+    var t0=Date.now();
+    var r=await apiFetch('/api/fcm/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:deviceId,data:data})});
+    var ms=Date.now()-t0;
+    var json=await r.json();
+    var cls=r.ok?'s2xx':'s4xx';
+    st.innerHTML='<span class="status-pill '+cls+'">'+r.status+'</span> <span style="color:#475569">'+ms+'ms</span>';
+    resp.textContent=JSON.stringify(json,null,2);
+    resp.className='resp '+(r.ok?'ok':'err');
+    resp.style.display='block';
+  }catch(e){
+    st.innerHTML='<span class="status-pill s5xx">Error</span>';
+    resp.textContent=e.message;resp.className='resp err';resp.style.display='block';
+  }finally{btn.disabled=false;btn.innerHTML='Send FCM';}
+}
+async function batchSend(){
+  var appId=document.getElementById('dev-app').value.trim();
+  if(!appId){alert('Enter App ID first');return;}
+  if(!deviceList.length){alert('Load devices first');return;}
+  var data;
+  var raw=document.getElementById('raw-json').value.trim();
+  try{data=raw?JSON.parse(raw):buildPayload();}catch(e){alert('Invalid JSON');return;}
+  var bst=document.getElementById('batch-status');
+  var bresp=document.getElementById('batch-resp');
+  bst.textContent='Sending to '+deviceList.length+' devices...';bresp.style.display='none';
+  var results=[];
+  for(var i=0;i<deviceList.length;i++){
+    var d=deviceList[i];
+    try{
+      var r=await apiFetch('/api/fcm/send',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({deviceId:d.deviceId,data:Object.assign({},data,{deviceId:d.deviceId})})});
+      var j=await r.json();
+      results.push({deviceId:d.deviceId,name:d.name,ok:r.ok,status:r.status,result:j});
+    }catch(e){results.push({deviceId:d.deviceId,name:d.name,ok:false,error:e.message});}
+  }
+  var ok=results.filter(function(r){return r.ok;}).length,fail=results.length-ok;
+  bst.innerHTML='<span style="color:#4ade80">'+ok+' sent</span>'+(fail?' <span style="color:#f87171">'+fail+' failed</span>':'');
+  bresp.textContent=JSON.stringify(results,null,2);
+  bresp.className='resp '+(fail?'err':'ok');
+  bresp.style.display='block';
+}
+loadCfg();
+</script>
+</body>
+</html>
